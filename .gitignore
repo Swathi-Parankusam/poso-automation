@@ -9,6 +9,14 @@ bower_components/
 .env.*
 !.env.example
 
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
 # Test reports and generated artifacts
 reports/
 screenshots/
@@ -22,13 +30,8 @@ coverage/
 # Self-healing logs and cache
 healing-logs/
 resources/healing-cache.json
-*.log
 
-# Node.js logs and diagnostic reports
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+# Diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Runtime data
@@ -78,15 +81,19 @@ dist/
 .svelte-kit/
 .docusaurus/
 web_modules/
+
+# Yarn
 .pnp.*
 .yarn/*
-
-# Keep Yarn configuration files if needed
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
 
 # Operating system files
 .DS_Store
