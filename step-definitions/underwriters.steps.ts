@@ -555,12 +555,17 @@ When(
 // --------------------------------------------------
 
 Then(
-    'the underwriter should be displayed with {string} status',
-    async function (status: 'Active' | 'Inactive') {
+    'the underwriter should be displayed with {word} status',
+    async function (
+        this: CustomWorld,
+        status: string
+    ) {
         const underwritersPage = getUnderwritersPage(this);
 
-        if (!['Active', 'Inactive'].includes(status)) {
-            throw new Error(`Unsupported underwriter status: ${status}`);
+        if (status !== 'Active' && status !== 'Inactive') {
+            throw new Error(
+                `Unsupported underwriter status: ${status}`
+            );
         }
 
         await underwritersPage.verifyUnderwriterStatus(status);
@@ -570,9 +575,7 @@ Then(
 When(
     'I open the actions menu and select Deactivate',
     async function (this: CustomWorld) {
-
         const underwritersPage = getUnderwritersPage(this);
-
         await underwritersPage.selectDeactivateAction();
     }
 );
@@ -580,9 +583,7 @@ When(
 When(
     'I confirm the deactivation',
     async function (this: CustomWorld) {
-
         const underwritersPage = getUnderwritersPage(this);
-
         await underwritersPage.confirmDeactivation();
     }
 );
@@ -590,9 +591,7 @@ When(
 When(
     'I open the actions menu and select Activate',
     async function (this: CustomWorld) {
-
         const underwritersPage = getUnderwritersPage(this);
-
         await underwritersPage.selectActivateAction();
     }
 );
@@ -600,9 +599,7 @@ When(
 When(
     'I confirm the activation',
     async function (this: CustomWorld) {
-
         const underwritersPage = getUnderwritersPage(this);
-
         await underwritersPage.confirmActivation();
     }
 );

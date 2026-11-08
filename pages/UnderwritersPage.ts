@@ -45,6 +45,8 @@ export class UnderwritersPage {
     private originalCompanyName = '';
     private cancelledCompanyName = '';
 
+    private selectedStatusFilter: 'Active' | 'Inactive' | '' = '';
+
     constructor(page: Page) {
         this.page = page;
         this.actions = new SelfHealingActions(page);
@@ -193,44 +195,243 @@ export class UnderwritersPage {
         console.log(`${description} clicked`);
     }
 
+    // --------------------------------------------------
+    // FILTER PANEL HELPER
+    // --------------------------------------------------
+
     private async ensureFiltersOpen(): Promise<void> {
-    const emailFilter = this.page.getByRole('textbox', {
-        name: 'Email'
-    });
 
-    const companyFilter = this.page.getByRole('textbox', {
-        name: 'Company Name'
-    });
+        const emailById = this.page.locator('#filter-email');
+        const companyById = this.page.locator('#filter-companyName');
+        const statusById = this.page.locator('#filter-status');
+        const updatedAtById = this.page.locator('#filter-updatedAt');
 
-    // If either filter field is visible, the filter panel is already open.
-    if (
-        await emailFilter.isVisible().catch(() => false) ||
-        await companyFilter.isVisible().catch(() => false)
-    ) {
-        console.log('Filter panel is already open');
-        return;
+        const emailByRole = this.page.getByRole('textbox', {
+            name: 'Email'
+        });
+
+        const companyByRole = this.page.getByRole('textbox', {
+            name: 'Company Name'
+        });
+
+        const emailVisible =
+            await emailById.isVisible().catch(() => false) ||
+            await emailByRole.isVisible().catch(() => false);
+
+        const companyVisible =
+            await companyById.isVisible().catch(() => false) ||
+            await companyByRole.isVisible().catch(() => false);
+
+        const statusVisible =
+            await statusById.isVisible().catch(() => false);
+
+        const updatedAtVisible =
+            await updatedAtById.isVisible().catch(() => false);
+
+        const filtersAlreadyOpen =
+            emailVisible ||
+            companyVisible ||
+            statusVisible ||
+            updatedAtVisible;
+
+        if (filtersAlreadyOpen) {
+            console.log('Filter panel is already open');
+            return;
+        }
+
+        console.log(
+            'Filter panel is not currently visible. Trying to open it.'
+        );
+
+        const filterOptionsButton = this.page.getByRole('button', {
+            name: 'Filter options',
+            exact: true
+        });
+
+        const buttonCount = await filterOptionsButton.count();
+
+        if (buttonCount === 0) {
+
+            console.log('\n========== FILTER DEBUG DETAILS ==========');
+            console.log('Current URL:', this.page.url());
+
+            const visibleButtons = await this.page.locator('button').evaluateAll(
+                buttons => buttons
+                    .filter(button => {
+                        const element = button as HTMLElement;
+                        return element.offsetWidth > 0 &&
+                            element.offsetHeight > 0;
+                    })
+                    .map(button => ({
+                        text: button.textContent?.trim(),
+                        ariaLabel: button.getAttribute('aria-label'),
+                        title: button.getAttribute('title')
+                    }))
+            );
+
+            console.log('Visible buttons:', visibleButtons);
+
+            const inputs = await this.page.locator('input, select').evaluateAll(
+                elements => elements.map(element => ({
+                    tag: element.tagName,
+                    id: element.id,
+                    placeholder: element.getAttribute('placeholder'),
+                    type: element.getAttribute('type'),
+                    visible: (element as HTMLElement).offsetWidth > 0
+                }))
+            );
+
+            console.log('Input elements:', inputs);
+            console.log('========== END FILTER DEBUG ==========\n');
+
+            throw new Error(
+                'Filter panel and Filter options button are unavailable. ' +
+                `Current URL: ${this.page.url()}`
+            );
+        }
+
+        const buttonVisible = await filterOptionsButton
+            .first()
+            .isVisible()
+            .catch(() => false);
+
+        if (!buttonVisible) {
+            throw new Error(
+                'The Filter options button exists but is not visible. ' +
+                'Unable to open the filter panel.'
+            );
+        }
+
+        await filterOptionsButton.first().click();
+
+        await expect.poll(
+            async () => {
+                return (
+                    await emailById.isVisible().catch(() => false) ||
+                    await emailByRole.isVisible().catch(() => false) ||
+                    await companyById.isVisible().catch(() => false) ||
+                    await companyByRole.isVisible().catch(() => false) ||
+                    await statusById.isVisible().catch(() => false) ||
+                    await updatedAtById.isVisible().catch(() => false)
+                );
+            },
+            {
+                timeout: 10000,
+                message:
+                    'Filter panel did not become visible after clicking Filter options'
+            }
+        ).toBe(true);
+
+        console.log('Filter panel opened successfully');
+
+    await this.page.waitForTimeout(1000);
+
+console.log('\n========== FILTER PANEL DIAGNOSTICS ==========');
+
+console.log(
+    'Current URL:',
+    this.page.url()
+);
+
+console.log(
+    'Visible inputs:',
+    await this.page.locator('input:visible').evaluateAll(elements =>
+        elements.map(element => ({
+            id: (element as HTMLInputElement).id,
+            name: (element as HTMLInputElement).name,
+            placeholder: (element as HTMLInputElement).placeholder,
+            type: (element as HTMLInputElement).type
+        }))
+    )
+);
+
+console.log(
+    'Visible selects:',
+    await this.page.locator('select:visible').evaluateAll(elements =>
+        elements.map(element => ({
+            id: (element as HTMLSelectElement).id,
+            name: (element as HTMLSelectElement).name,
+            options: Array.from(
+                (element as HTMLSelectElement).options
+            ).map(option => option.text)
+        }))
+    )
+);
+
+console.log(
+    'Visible buttons:',
+    await this.page.locator('button:visible').allTextContents()
+);
+
+console.log(
+    'Visible comboboxes:',
+    await this.page.getByRole('combobox').evaluateAll(elements =>
+        elements.map(element => ({
+            id: (element as HTMLElement).id,
+            text: element.textContent?.trim(),
+            ariaLabel: element.getAttribute('aria-label')
+        }))
+    )
+);
+
+console.log('==============================================\n');
+
+}
+
+    
+
+    // --------------------------------------------------
+    // FILTER VERIFICATION HELPERS
+    // --------------------------------------------------
+
+    private async verifySelectedStatus(rows: Locator): Promise<void> {
+
+        if (!this.selectedStatusFilter) {
+            return;
+        }
+
+        const rowCount = await rows.count();
+
+        if (rowCount === 0) {
+            throw new Error(
+                'No underwriter rows found for status verification'
+            );
+        }
+
+        for (let index = 0; index < rowCount; index++) {
+
+            const statusCell = rows.nth(index).locator('td').nth(2);
+
+            await expect(statusCell).toHaveText(
+                this.selectedStatusFilter,
+                { timeout: 15000 }
+            );
+        }
+
+        console.log(
+            `All displayed underwriters have ${this.selectedStatusFilter} status`
+        );
     }
 
-    // Otherwise, open the filter panel.
-    const filterButton = this.page.getByRole('button', {
-        name: 'Filter options',
-        exact: true
-    });
+    private getExpectedDisplayDate(date: string): string {
 
-    await filterButton.waitFor({
-        state: 'visible',
-        timeout: 15000
-    });
+        const [day, month, year] = date.split('/');
 
-    await filterButton.click();
+        if (!day || !month || !year) {
+            throw new Error(
+                `Invalid date format: ${date}. Expected DD/MM/YYYY`
+            );
+        }
 
-    await emailFilter.waitFor({
-        state: 'visible',
-        timeout: 15000
-    });
-
-    console.log('Filter panel opened successfully');
-}
+        return new Date(
+            Date.UTC(Number(year), Number(month) - 1, Number(day))
+        ).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            timeZone: 'UTC'
+        });
+    }
 
     // --------------------------------------------------
     // POSO NAVIGATION
@@ -299,19 +500,18 @@ export class UnderwritersPage {
 
     async clickNewUnderwriter(): Promise<void> {
 
-    await this.clickAndWait(
-        this.getButton('New Underwriter'),
-        'New Underwriter'
-    );
+        await this.clickAndWait(
+            this.getButton('New Underwriter'),
+            'New Underwriter'
+        );
 
-    // Wait until the Underwriter form is fully opened
-    await this.page.locator('#company-name').waitFor({
-        state: 'visible',
-        timeout: 15000
-    });
+        await this.page.locator('#company-name').waitFor({
+            state: 'visible',
+            timeout: 15000
+        });
 
-    console.log('New Underwriter form opened successfully');
-}
+        console.log('New Underwriter form opened successfully');
+    }
 
     async selectNewUnderwriter(): Promise<void> {
         await this.clickNewUnderwriter();
@@ -524,7 +724,6 @@ export class UnderwritersPage {
     async updateUnderwriterDetails(details: UnderwriterDetails): Promise<void> {
         await this.fillCompanyDetails(details);
         await this.fillAddressDetails(details);
-        await this.fillBankDetails(details);
 
         console.log('Selected underwriter details updated');
     }
@@ -634,7 +833,9 @@ export class UnderwritersPage {
     async verifyOriginalUnderwriterDetailsUnchanged(): Promise<void> {
 
         if (!this.originalCompanyName) {
-            throw new Error('Original company name was not captured before editing');
+            throw new Error(
+                'Original company name was not captured before editing'
+            );
         }
 
         const row = this.getUnderwriterRow(this.originalCompanyName);
@@ -656,24 +857,24 @@ export class UnderwritersPage {
 
     async verifyUpdateFormDisplayed(): Promise<void> {
 
-    const updateButton = this.page.locator(
-        'button[type="submit"]'
-    ).filter({
-        hasText: 'Update Underwriter'
-    });
+        const updateButton = this.page.locator(
+            'button[type="submit"]'
+        ).filter({
+            hasText: 'Update Underwriter'
+        });
 
-    await expect(updateButton).toBeVisible({
-        timeout: 15000
-    });
+        await expect(updateButton).toBeVisible({
+            timeout: 15000
+        });
 
-    await expect(
-        this.page.locator('#company-name')
-    ).toBeVisible({
-        timeout: 15000
-    });
+        await expect(
+            this.page.locator('#company-name')
+        ).toBeVisible({
+            timeout: 15000
+        });
 
-    console.log('Update Underwriter form opened successfully');
-}
+        console.log('Update Underwriter form opened successfully');
+    }
 
     // --------------------------------------------------
     // SEARCH
@@ -743,77 +944,72 @@ export class UnderwritersPage {
     // FILTERS
     // --------------------------------------------------
 
-    async openFilters(): Promise<void> {
-        await this.ensureFiltersOpen();
+async filterByStatus(status: 'Active' | 'Inactive'): Promise<void> {
+
+    await this.ensureFiltersOpen();
+
+    const listUrl = this.page.url();
+
+    if (!listUrl.includes('/screens/underwriters')) {
+        throw new Error(
+            'Cannot apply the status filter because the browser is not ' +
+            `on the Underwriters list page. Current URL: ${listUrl}`
+        );
     }
 
-    async filterByStatus(status: 'Active' | 'Inactive'): Promise<void> {
+    // Status is a combobox without an ID.
+    const statusDropdown = this.page.getByRole('combobox');
 
-        await this.ensureFiltersOpen();
+    await statusDropdown.waitFor({
+        state: 'visible',
+        timeout: 10000
+    });
 
-        const statusDropdown = this.page.locator('#filter-status');
+    console.log(
+        'Current Status filter value:',
+        (await statusDropdown.textContent())?.trim()
+    );
 
-        if (await statusDropdown.count() > 0) {
+    await statusDropdown.click();
 
-            const tagName = await statusDropdown.evaluate(
-                element => element.tagName.toLowerCase()
-            );
+    // Locate the requested dropdown option.
+    const statusOption = this.page.getByRole('option', {
+        name: status,
+        exact: true
+    });
 
-            if (tagName === 'select') {
-                await statusDropdown.selectOption({ label: status });
-            } else {
-                await statusDropdown.click();
+    await statusOption.waitFor({
+        state: 'visible',
+        timeout: 10000
+    });
 
-                const option = this.page.getByRole('option', {
-                    name: status,
-                    exact: true
-                });
+    await statusOption.click();
 
-                if (await option.count() > 0) {
-                    await option.last().click();
-                } else {
-                    await this.page.getByText(status, {
-                        exact: true
-                    }).last().click();
-                }
-            }
+    this.selectedStatusFilter = status;
 
-        } else {
-            const statusLabel = this.page.getByText('Status', {
-                exact: true
-            }).last();
+    console.log(`Status filter applied: ${status}`);
 
-            await statusLabel.waitFor({
-                state: 'visible',
-                timeout: 10000
-            });
+    const currentUrl = this.page.url();
 
-            await statusLabel.click();
-
-            const option = this.page.getByRole('option', {
-                name: status,
-                exact: true
-            });
-
-            if (await option.count() > 0) {
-                await option.last().click();
-            } else {
-                await this.page.getByText(status, {
-                    exact: true
-                }).last().click();
-            }
-        }
-
-        console.log(`Status filter applied: ${status}`);
+    if (!currentUrl.includes('/screens/underwriters')) {
+        throw new Error(
+            'The browser navigated away from the Underwriters list page. ' +
+            `Current URL: ${currentUrl}`
+        );
     }
+}
 
     async filterByCompanyName(companyName: string): Promise<void> {
 
         await this.ensureFiltersOpen();
 
-        const companyFilter = this.page.getByRole('textbox', {
-            name: 'Company Name'
-        });
+        const companyFilter = await this.getElement(
+            'filter-companyName',
+            { type: 'css', value: '#filter-companyName' },
+            [
+                { type: 'placeholder', value: 'Search by company name' }
+            ]
+        );
 
         await companyFilter.waitFor({
             state: 'visible',
@@ -829,9 +1025,13 @@ export class UnderwritersPage {
 
         await this.ensureFiltersOpen();
 
-        const emailFilter = this.page.getByRole('textbox', {
-            name: 'Email'
-        });
+        const emailFilter = await this.getElement(
+            'filter-email',
+            { type: 'css', value: '#filter-email' },
+            [
+                { type: 'placeholder', value: 'Search by email' }
+            ]
+        );
 
         await emailFilter.waitFor({
             state: 'visible',
@@ -855,35 +1055,19 @@ export class UnderwritersPage {
             );
         }
 
-        const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const formattedDate =
+            `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
-        const dateInput = this.page.getByRole('textbox', {
-            name: 'Last Updated'
+        const dateInput = this.page.locator('#filter-updatedAt');
+
+        await dateInput.waitFor({
+            state: 'visible',
+            timeout: 15000
         });
 
-        if (await dateInput.count() > 0 && await dateInput.isVisible().catch(() => false)) {
-            await dateInput.fill(formattedDate);
-        } else {
-            const fallbackInput = this.page.locator('#filter-updatedAt');
+        await dateInput.fill(formattedDate);
 
-            await fallbackInput.waitFor({
-                state: 'attached',
-                timeout: 10000
-            });
-
-            await fallbackInput.evaluate((element, value) => {
-                const input = element as HTMLInputElement;
-                const setter = Object.getOwnPropertyDescriptor(
-                    HTMLInputElement.prototype,
-                    'value'
-                )?.set;
-
-                setter?.call(input, value);
-
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-            }, formattedDate);
-        }
+        await expect(dateInput).toHaveValue(formattedDate);
 
         console.log(`Last Updated filter applied: ${date}`);
     }
@@ -901,6 +1085,8 @@ export class UnderwritersPage {
             await clearButton.click();
         }
 
+        this.selectedStatusFilter = '';
+
         console.log('Filters cleared');
     }
 
@@ -908,10 +1094,15 @@ export class UnderwritersPage {
 
         const normalizedFilter = filterName.toLowerCase();
 
-        if (normalizedFilter === 'email' || normalizedFilter === 'email address') {
+        if (
+            normalizedFilter === 'email' ||
+            normalizedFilter === 'email address'
+        ) {
             await this.filterByEmail(value);
+
         } else if (normalizedFilter === 'company name') {
             await this.filterByCompanyName(value);
+
         } else {
             throw new Error(`Unsupported filter type: ${filterName}`);
         }
@@ -920,78 +1111,91 @@ export class UnderwritersPage {
     }
 
     async verifyFilterResult(
-    filterName: string,
-    value: string
-): Promise<void> {
+        filterName: string,
+        value: string
+    ): Promise<void> {
 
-    const normalizedFilter = filterName.toLowerCase();
+        const normalizedFilter = filterName.toLowerCase();
 
-    const rows = this.page.locator('table tbody tr');
+        const rows = this.getTable().locator('tbody tr');
 
-    if (normalizedFilter === 'email' ||
-        normalizedFilter === 'email address') {
+        if (
+            normalizedFilter === 'email' ||
+            normalizedFilter === 'email address'
+        ) {
 
-        const matchingRow = rows.filter({
-            has: this.page.getByText(value, { exact: true })
-        });
+            const matchingRows = rows.filter({
+                has: this.page.getByText(value, { exact: true })
+            });
 
-        await expect(matchingRow).toHaveCount(1, {
-            timeout: 15000
-        });
+            await expect(matchingRows).toHaveCount(1, {
+                timeout: 15000
+            });
 
-        await expect(
-            matchingRow.getByText(value, { exact: true })
-        ).toBeVisible();
+            await expect(
+                matchingRows.getByText(value, { exact: true })
+            ).toBeVisible();
 
-        console.log(`Verified exact email match: ${value}`);
-        return;
+            await this.verifySelectedStatus(matchingRows);
+
+            console.log(`Verified exact email match: ${value}`);
+            return;
+        }
+
+        if (normalizedFilter === 'company name') {
+
+            await expect(rows.first()).toBeVisible({
+                timeout: 15000
+            });
+
+            const matchingRows = rows.filter({
+                has: this.page.getByText(value, { exact: false })
+            });
+
+            await expect(matchingRows.first()).toBeVisible({
+                timeout: 15000
+            });
+
+            const rowCount = await rows.count();
+
+            for (let index = 0; index < rowCount; index++) {
+
+                const companyCell = rows.nth(index).locator('td').nth(0);
+
+                await expect(companyCell).toContainText(value, {
+                    timeout: 15000
+                });
+            }
+
+            await this.verifySelectedStatus(rows);
+
+            console.log(`Verified company name filter: ${value}`);
+            return;
+        }
+
+        throw new Error(`Unsupported filter verification: ${filterName}`);
     }
-
-    if (normalizedFilter === 'company name') {
-
-        const matchingRows = rows.filter({
-            has: this.page.getByText(value, { exact: false })
-        });
-
-        await expect(matchingRows.first()).toBeVisible({
-            timeout: 15000
-        });
-
-        console.log(`Verified company name filter: ${value}`);
-        return;
-    }
-
-    throw new Error(`Unsupported filter verification: ${filterName}`);
-}
 
     async verifyLastUpdatedFilterResult(date: string): Promise<void> {
 
         const [day, month, year] = date.split('/');
 
         if (!day || !month || !year) {
-            throw new Error(`Invalid date format: ${date}`);
+            throw new Error(
+                `Invalid date format: ${date}. Expected DD/MM/YYYY`
+            );
         }
 
-        const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const formattedDate =
+            `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
-        const dateInput = this.page.getByRole('textbox', {
-            name: 'Last Updated'
+        const dateInput = this.page.locator('#filter-updatedAt');
+
+        await expect(dateInput).toHaveValue(formattedDate, {
+            timeout: 15000
         });
 
-        if (await dateInput.count() > 0 && await dateInput.isVisible().catch(() => false)) {
-            await expect(dateInput).toHaveValue(formattedDate);
-        } else {
-            await expect(this.page.locator('#filter-updatedAt')).toHaveValue(formattedDate);
-        }
-
-        const expectedDisplayDate = new Date(
-            Date.UTC(Number(year), Number(month) - 1, Number(day))
-        ).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            timeZone: 'UTC'
-        });
+        const expectedDisplayDate = this.getExpectedDisplayDate(date);
 
         const rows = this.getTable().locator('tbody tr');
 
@@ -1002,10 +1206,42 @@ export class UnderwritersPage {
 
         const rowCount = await rows.count();
 
+        console.log('\n========== LAST UPDATED FILTER DIAGNOSTICS ==========');
+
+console.log('Expected date:', expectedDisplayDate);
+
+console.log('Table row count:', await rows.count());
+
+console.log(
+    'Table headers:',
+    await this.getTable().locator('thead th').allTextContents()
+);
+
+console.log(
+    'Table rows:',
+    await rows.evaluateAll(elements =>
+        elements.map(row => ({
+            text: row.textContent?.trim(),
+            cells: Array.from(row.querySelectorAll('td')).map(
+                cell => cell.textContent?.trim()
+            ),
+            cellCount: row.querySelectorAll('td').length
+        }))
+    )
+);
+
+console.log('=====================================================\n');
+
         for (let index = 0; index < rowCount; index++) {
-            await expect(rows.nth(index).locator('td').nth(3))
-                .toHaveText(expectedDisplayDate);
+
+            const dateCell = rows.nth(index).locator('td').nth(3);
+
+            await expect(dateCell).toHaveText(expectedDisplayDate, {
+                timeout: 15000
+            });
         }
+
+        await this.verifySelectedStatus(rows);
 
         console.log(`Verified Last Updated filter result: ${date}`);
     }
@@ -1039,19 +1275,28 @@ export class UnderwritersPage {
         await expect(this.getUnderwriterRow(identifier)).toHaveCount(0);
     }
 
-    async verifyUnderwriterStatus(status: 'Active' | 'Inactive'): Promise<void> {
+    async verifyUnderwriterStatus(
+        status: 'Active' | 'Inactive'
+    ): Promise<void> {
 
         if (!this.currentUnderwriterIdentifier) {
-            throw new Error('No underwriter identifier is available for status verification');
+            throw new Error(
+                'No underwriter identifier is available for status verification'
+            );
         }
 
         const email = this.currentUnderwriterIdentifier;
         const row = this.getUnderwriterRow(email);
 
-        await expect(row).toHaveCount(1, { timeout: 15000 });
+        await expect(row).toHaveCount(1, {
+            timeout: 15000
+        });
 
         await expect(row.locator('td').nth(1)).toHaveText(email);
-        await expect(row.locator('td').nth(2)).toHaveText(status);
+
+        await expect(row.locator('td').nth(2)).toHaveText(status, {
+            timeout: 15000
+        });
 
         console.log(`Verified ${email} with ${status} status`);
     }
@@ -1076,96 +1321,101 @@ export class UnderwritersPage {
     async openCurrentUnderwriterActions(): Promise<void> {
 
         if (!this.currentUnderwriterIdentifier) {
-            throw new Error('Search for an underwriter before opening its actions');
+            throw new Error(
+                'Search for an underwriter before opening its actions'
+            );
         }
 
-        await this.openUnderwriterActions(this.currentUnderwriterIdentifier);
+        await this.openUnderwriterActions(
+            this.currentUnderwriterIdentifier
+        );
     }
 
-    private async clickRowAction(
-    actionName: string
-): Promise<void> {
+    private async clickRowAction(actionName: string): Promise<void> {
 
-    const menuItem = this.page.getByRole('menuitem', {
-        name: actionName,
-        exact: true
-    });
+        const menuItem = this.page.getByRole('menuitem', {
+            name: actionName,
+            exact: true
+        });
 
-    if (await menuItem.count() > 0) {
-        await menuItem.waitFor({
+        if (await menuItem.count() > 0) {
+
+            await menuItem.waitFor({
+                state: 'visible',
+                timeout: 10000
+            });
+
+            await menuItem.click();
+
+            console.log(`${actionName} menu item clicked`);
+            return;
+        }
+
+        const menuButton = this.page.getByRole('button', {
+            name: actionName,
+            exact: true
+        });
+
+        if (await menuButton.count() > 0) {
+
+            await menuButton.waitFor({
+                state: 'visible',
+                timeout: 10000
+            });
+
+            await menuButton.click();
+
+            console.log(`${actionName} button clicked`);
+            return;
+        }
+
+        const textOption = this.page.getByText(
+            actionName,
+            { exact: true }
+        );
+
+        await textOption.first().waitFor({
             state: 'visible',
             timeout: 10000
         });
 
-        await menuItem.click();
+        await textOption.first().click();
 
-        console.log(`${actionName} menu item clicked`);
-        return;
+        console.log(`${actionName} action clicked`);
     }
-
-    const menuButton = this.page.getByRole('button', {
-        name: actionName,
-        exact: true
-    });
-
-    if (await menuButton.count() > 0) {
-        await menuButton.waitFor({
-            state: 'visible',
-            timeout: 10000
-        });
-
-        await menuButton.click();
-
-        console.log(`${actionName} button clicked`);
-        return;
-    }
-
-    const textOption = this.page.getByText(
-        actionName,
-        { exact: true }
-    );
-
-    await textOption.first().waitFor({
-        state: 'visible',
-        timeout: 10000
-    });
-
-    await textOption.first().click();
-
-    console.log(`${actionName} action clicked`);
-}
 
     async selectEditAction(): Promise<void> {
 
-    await this.openCurrentUnderwriterActions();
+        await this.openCurrentUnderwriterActions();
 
-    await this.clickRowAction('Edit');
+        await this.clickRowAction('Edit');
 
-    await this.page.waitForLoadState('domcontentloaded')
-        .catch(() => {});
+        await this.page.waitForLoadState('domcontentloaded')
+            .catch(() => {});
 
-    await this.verifyUpdateFormDisplayed();
+        await this.verifyUpdateFormDisplayed();
 
-    console.log('Edit action selected');
-}
+        console.log('Edit action selected');
+    }
 
     async editUnderwriter(identifier: string): Promise<void> {
 
-    this.currentUnderwriterIdentifier = identifier;
+        this.currentUnderwriterIdentifier = identifier;
 
-    await this.openUnderwriterActions(identifier);
+        await this.openUnderwriterActions(identifier);
 
-    await this.clickRowAction('Edit');
+        await this.clickRowAction('Edit');
 
-    await this.page.waitForLoadState('domcontentloaded')
-        .catch(() => {});
+        await this.page.waitForLoadState('domcontentloaded')
+            .catch(() => {});
 
-    await this.verifyUpdateFormDisplayed();
+        await this.verifyUpdateFormDisplayed();
 
-    console.log('Edit action selected');
-}
+        console.log('Edit action selected');
+    }
 
     async selectDeactivateAction(): Promise<void> {
+
         await this.openCurrentUnderwriterActions();
         await this.clickRowAction('Deactivate');
 
@@ -1185,6 +1435,7 @@ export class UnderwritersPage {
     }
 
     async selectActivateAction(): Promise<void> {
+
         await this.openCurrentUnderwriterActions();
         await this.clickRowAction('Activate');
 
@@ -1267,7 +1518,9 @@ export class UnderwritersPage {
 
         await this.verifyCreateFormDisplayed();
 
-        console.log('Underwriter was not created because mandatory fields are empty');
+        console.log(
+            'Underwriter was not created because mandatory fields are empty'
+        );
     }
 
     // --------------------------------------------------

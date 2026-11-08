@@ -119,37 +119,37 @@ Feature: POSO Underwriters Management
     And I log out from POSO
 
 
-  @UW_TC_005 @UW_Filter
+  @UW_TC_005 @UW_Filter @UW_Positive
   Scenario: UW_TC_005 - Verify combined filters and clear filters
 
     # Active Status with Email
     When I filter underwriters by status "Active"
-    And I apply the filter "Email" with value "poso.test13@example.com"
-    Then the underwriter list should match the filter "Email" with value "poso.test13@example.com"
+    And I apply the filter "Email" with value "info@afritect.com"
+    Then the underwriter list should match the filter "Email" with value "info@afritect.com"
     When I clear all underwriter filters
 
     # Inactive Status with Email
     When I filter underwriters by status "Inactive"
-    And I apply the filter "Email" with value "testuserom@gmail.com"
-    Then the underwriter list should match the filter "Email" with value "testuserom@gmail.com"
+    And I apply the filter "Email" with value "botsgen@nsure.com"
+    Then the underwriter list should match the filter "Email" with value "botsgen@nsure.com"
     When I clear all underwriter filters
 
     # Active Status with Company Name
     When I filter underwriters by status "Active"
-    And I apply the filter "Company Name" with value "POSO Test Company 13 Updated"
-    Then the underwriter list should match the filter "Company Name" with value "POSO Test Company 13 Updated"
+    And I apply the filter "Company Name" with value "Afritec Life Insurance"
+    Then the underwriter list should match the filter "Company Name" with value "Afritec Life Insurance"
     When I clear all underwriter filters
 
     # Inactive Status with Company Name
     When I filter underwriters by status "Inactive"
-    And I apply the filter "Company Name" with value "OM"
-    Then the underwriter list should match the filter "Company Name" with value "OM"
+    And I apply the filter "Company Name" with value "Botswana Assurance Services (Pty) Ltd"
+    Then the underwriter list should match the filter "Company Name" with value "Botswana Assurance Services (Pty) Ltd"
     When I clear all underwriter filters
 
     # Active Status with Last Updated
     When I filter underwriters by status "Active"
-    And I filter underwriters by Last Updated date "02/11/2026"
-    Then the underwriter list should match the selected Last Updated date "02/11/2026"
+    And I filter underwriters by Last Updated date "08/11/2026"
+    Then the underwriter list should match the selected Last Updated date "08/11/2026"
     When I clear all underwriter filters
 
     # Inactive Status with Last Updated
@@ -162,12 +162,12 @@ Feature: POSO Underwriters Management
     Then I should be redirected to the POSO login page
 
 
-  @UW_TC_006 @UW_Deactivate @UW_Activate
+  @UW_TC_006 @UW_Deactivate @UW_Activate @UW_Positive
   Scenario: UW_TC_006 - Deactivate and reactivate an underwriter and verify both statuses
 
     # Locate and deactivate the active underwriter
     When I filter underwriters by status "Active"
-    And I apply the filter "Email" with value "poso.test13@example.com"
+    And I apply the filter "Email" with value "info@afritect.com"
     Then the underwriter should be displayed with Active status
 
     When I open the actions menu and select Deactivate
@@ -176,7 +176,7 @@ Feature: POSO Underwriters Management
 
     # Locate and verify the inactive underwriter
     When I filter underwriters by status "Inactive"
-    And I apply the filter "Email" with value "poso.test13@example.com"
+    And I apply the filter "Email" with value "info@afritect.com"
     Then the underwriter should be displayed with Inactive status
 
     When I open the actions menu and select Activate
@@ -185,7 +185,7 @@ Feature: POSO Underwriters Management
 
     # Verify the final Active status
     When I filter underwriters by status "Active"
-    And I apply the filter "Email" with value "poso.test13@example.com"
+    And I apply the filter "Email" with value "info@afritect.com"
     Then the underwriter should be displayed with Active status
 
     And I log out from POSO
