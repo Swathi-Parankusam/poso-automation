@@ -16,11 +16,7 @@ export class SelfHealingActions {
         primary: LocatorConfig,
         fallbacks: LocatorConfig[] = []
     ): Promise<Locator> {
-        return await this.healingLocator.find(
-            key,
-            primary,
-            fallbacks
-        );
+        return this.healingLocator.find(key, primary, fallbacks);
     }
 
     // Click an element.
@@ -29,12 +25,7 @@ export class SelfHealingActions {
         primary: LocatorConfig,
         fallbacks: LocatorConfig[] = []
     ): Promise<void> {
-        const locator = await this.getLocator(
-            key,
-            primary,
-            fallbacks
-        );
-
+        const locator = await this.getLocator(key, primary, fallbacks);
         await locator.click();
     }
 
@@ -45,12 +36,7 @@ export class SelfHealingActions {
         value: string,
         fallbacks: LocatorConfig[] = []
     ): Promise<void> {
-        const locator = await this.getLocator(
-            key,
-            primary,
-            fallbacks
-        );
-
+        const locator = await this.getLocator(key, primary, fallbacks);
         await locator.fill(value);
     }
 
@@ -60,12 +46,7 @@ export class SelfHealingActions {
         primary: LocatorConfig,
         fallbacks: LocatorConfig[] = []
     ): Promise<void> {
-        const locator = await this.getLocator(
-            key,
-            primary,
-            fallbacks
-        );
-
+        const locator = await this.getLocator(key, primary, fallbacks);
         await locator.clear();
     }
 
@@ -76,12 +57,7 @@ export class SelfHealingActions {
         value: Parameters<Locator['selectOption']>[0],
         fallbacks: LocatorConfig[] = []
     ): Promise<void> {
-        const locator = await this.getLocator(
-            key,
-            primary,
-            fallbacks
-        );
-
+        const locator = await this.getLocator(key, primary, fallbacks);
         await locator.selectOption(value);
     }
 
@@ -91,12 +67,7 @@ export class SelfHealingActions {
         primary: LocatorConfig,
         fallbacks: LocatorConfig[] = []
     ): Promise<void> {
-        const locator = await this.getLocator(
-            key,
-            primary,
-            fallbacks
-        );
-
+        const locator = await this.getLocator(key, primary, fallbacks);
         await locator.check();
     }
 
@@ -106,12 +77,7 @@ export class SelfHealingActions {
         primary: LocatorConfig,
         fallbacks: LocatorConfig[] = []
     ): Promise<void> {
-        const locator = await this.getLocator(
-            key,
-            primary,
-            fallbacks
-        );
-
+        const locator = await this.getLocator(key, primary, fallbacks);
         await locator.uncheck();
     }
 
@@ -121,13 +87,8 @@ export class SelfHealingActions {
         primary: LocatorConfig,
         fallbacks: LocatorConfig[] = []
     ): Promise<string | null> {
-        const locator = await this.getLocator(
-            key,
-            primary,
-            fallbacks
-        );
-
-        return await locator.textContent();
+        const locator = await this.getLocator(key, primary, fallbacks);
+        return locator.textContent();
     }
 
     // Verify whether an element is visible.
@@ -137,12 +98,7 @@ export class SelfHealingActions {
         fallbacks: LocatorConfig[] = []
     ): Promise<boolean> {
         try {
-            const locator = await this.getLocator(
-                key,
-                primary,
-                fallbacks
-            );
-
+            const locator = await this.getLocator(key, primary, fallbacks);
             return await locator.isVisible();
         } catch {
             return false;
@@ -156,12 +112,7 @@ export class SelfHealingActions {
         fallbacks: LocatorConfig[] = []
     ): Promise<boolean> {
         try {
-            const locator = await this.getLocator(
-                key,
-                primary,
-                fallbacks
-            );
-
+            const locator = await this.getLocator(key, primary, fallbacks);
             return await locator.isEnabled();
         } catch {
             return false;
@@ -175,12 +126,7 @@ export class SelfHealingActions {
         files: Parameters<Locator['setInputFiles']>[0],
         fallbacks: LocatorConfig[] = []
     ): Promise<void> {
-        const locator = await this.getLocator(
-            key,
-            primary,
-            fallbacks
-        );
-
+        const locator = await this.getLocator(key, primary, fallbacks);
         await locator.setInputFiles(files);
     }
 }
