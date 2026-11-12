@@ -3,11 +3,9 @@
   "version": "1.0.0",
   "description": "POSO automation using Playwright, TypeScript, and Cucumber BDD",
   "main": "index.js",
-
-"scripts": {
-    "test:bdd": "node --import tsx ./node_modules/@cucumber/cucumber/bin/cucumber.js --import ./support/world.ts --import ./support/hooks.ts --import ./step-definitions/login.steps.ts --import ./step-definitions/underwriters.steps.ts --import ./step-definitions/products.steps.ts --format progress --format html:reports/cucumber-report.html"
-},
-
+  "scripts": {
+    "test:bdd": "node --import tsx ./node_modules/@cucumber/cucumber/bin/cucumber.js --import ./support/world.ts --import ./support/hooks.ts --import ./step-definitions/login.steps.ts --import ./step-definitions/underwriters.steps.ts --import ./step-definitions/products.steps.ts --import ./step-definitions/rating.steps.ts --import ./step-definitions/leads.steps.ts --format progress --format html:reports/cucumber-report.html"
+  },
   "keywords": [
     "playwright",
     "typescript",

@@ -19,5 +19,104 @@
   "accountMenu": {
     "type": "css",
     "value": "[id=\"radix-:r5:\"]"
+  },
+  "products.create.newProduct": {
+    "type": "role",
+    "role": "button",
+    "name": "New Product"
+  },
+  "products.form.productName": {
+    "type": "placeholder",
+    "value": "Enter product name"
+  },
+  "products.form.abbreviation": {
+    "type": "css",
+    "value": "input[name=\"abbreviation\"]"
+  },
+  "products.form.description": {
+    "type": "css",
+    "value": "textarea[name=\"description\"]"
+  },
+  "products.coverage.addCoverage": {
+    "type": "role",
+    "role": "button",
+    "name": "Add Coverage"
+  },
+  "products.coverage.coverageName": {
+    "type": "css",
+    "value": "[name=\"coverages.0.name\"]"
+  },
+  "products.coverage.amount": {
+    "type": "css",
+    "value": "[name=\"coverages.0.amount\"]"
+  },
+  "products.coverage.description": {
+    "type": "css",
+    "value": "[name=\"coverages.0.description\"]"
+  },
+  "products.coverage.subLimits": {
+    "type": "css",
+    "value": "[name=\"coverages.0.subLimits\"]"
+  },
+  "products.coverage.waitingPeriod": {
+    "type": "css",
+    "value": "[name=\"coverages.0.waitingPeriod\"]"
+  },
+  "products.coverage.conditions": {
+    "type": "css",
+    "value": "[name=\"coverages.0.conditions\"]"
+  },
+  "products.benefit.addBenefit": {
+    "type": "role",
+    "role": "button",
+    "name": "Add Benefit"
+  },
+  "products.benefit.benefitName": {
+    "type": "css",
+    "value": "[name=\"benefits.0.name\"]"
+  },
+  "products.benefit.validityPeriod": {
+    "type": "css",
+    "value": "[name=\"benefits.0.validityPeriod\"]"
+  },
+  "products.benefit.description": {
+    "type": "css",
+    "value": "[name=\"benefits.0.description\"]"
+  },
+  "products.benefit.conditions": {
+    "type": "css",
+    "value": "[name=\"benefits.0.conditions\"]"
+  },
+  "products.additional.minimumAge": {
+    "type": "css",
+    "value": "input[name=\"minAge\"]"
+  },
+  "products.additional.maximumAge": {
+    "type": "css",
+    "value": "input[name=\"maxAge\"]"
+  },
+  "products.additional.termsConditions": {
+    "type": "css",
+    "value": "textarea[name=\"termsAndConditions\"]"
+  },
+  "products.documents.documentName": {
+    "type": "role",
+    "role": "textbox",
+    "name": "Required document name"
+  },
+  "products.documents.addDocument": {
+    "type": "role",
+    "role": "button",
+    "name": "Add"
+  },
+  "products.commission.collectionType": {
+    "type": "role",
+    "role": "radio",
+    "name": "Premium Collected by Broker (Deduct-at-Source)"
+  },
+  "products.create.createProduct": {
+    "type": "role",
+    "role": "button",
+    "name": "Create Product"
   }
 }
