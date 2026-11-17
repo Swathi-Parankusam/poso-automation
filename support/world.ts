@@ -1,3 +1,4 @@
+
 import {
     setWorldConstructor,
     World,
@@ -9,26 +10,55 @@ import type {
     Page,
 } from '@playwright/test';
 
-import type { LoginPage } from '../pages/LoginPage.ts';
-import type { UnderwritersPage } from '../pages/UnderwritersPage.ts';
+import type { LoginPage } from '../pages/LoginPage.js';
+import type { UnderwritersPage } from '../pages/UnderwritersPage.js';
+import type { PolicyholderProfilePage } from '../pages/PolicyholderProfilePage.js';
+import type { TaxConfigurationPage } from '../pages/TaxConfigurationPage.js';
 
 export class CustomWorld extends World {
 
-    // Browser configuration
+    // =========================================================
+    // BROWSER CONFIGURATION
+    // =========================================================
+
     browser?: Browser;
     context?: BrowserContext;
     page?: Page;
 
-    // Page Objects
+    // =========================================================
+    // PAGE OBJECTS
+    // =========================================================
+
     loginPage?: LoginPage;
     underwritersPage?: UnderwritersPage;
+    policyholderProfilePage?: PolicyholderProfilePage;
+    taxConfigurationPage?: TaxConfigurationPage;
 
-    // Additional page reference
+    // =========================================================
+    // ADDITIONAL PAGE REFERENCE
+    // =========================================================
+
     websitePage?: Page;
 
-    // Underwriter test data
+    // =========================================================
+    // UNDERWRITER TEST DATA
+    // =========================================================
+
     currentUnderwriterIdentifier?: string;
 
+    // =========================================================
+    // POLICYHOLDER PROFILE TEST DATA
+    // =========================================================
+
+    personalPolicyholderName?: string;
+    commercialPolicyholderName?: string;
+    commercialPolicyholderDetails?: Record<string, string>;
+
+    // =========================================================
+    // TAX CONFIGURATION TEST DATA
+    // =========================================================
+
+    currentTaxCode?: string;
 }
 
 setWorldConstructor(CustomWorld);
